@@ -1,0 +1,14 @@
+CREATE TABLE sysnord.user_account (
+  "ID" NUMBER NOT NULL,
+  user_name VARCHAR2(30 BYTE) NOT NULL,
+  "PASSWORD" VARCHAR2(30 BYTE) NOT NULL,
+  user_type VARCHAR2(10 BYTE) NOT NULL,
+  "ACTIVE" VARCHAR2(1 BYTE) NOT NULL,
+  email VARCHAR2(64 BYTE) NOT NULL,
+  full_name VARCHAR2(64 BYTE) NOT NULL,
+  sys_dt_ins DATE NOT NULL,
+  sys_emp_ins NUMBER NOT NULL,
+  sys_dt_upd DATE NOT NULL,
+  sys_emp_upd NUMBER NOT NULL,
+  CONSTRAINT pk_user_account PRIMARY KEY ("ID")
+);

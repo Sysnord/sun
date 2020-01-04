@@ -8,6 +8,9 @@ CREATE OR REPLACE NONEDITIONABLE package body sysnord.pck_util is
       from all_tables t
      where t.TABLE_NAME = upper(p_nm_tbl);
     return l_tbl_nm = 1;
+  exception
+    when no_data_found then
+      return false;
   end f_check_tbl;
 
   procedure p_create_sq(p_nm_tbl varchar2) is
@@ -360,12 +363,52 @@ end pck_api_' || p_nm_tbl || ';
     else
       l_id := 'to_char(' || pr_id || ')';
     end if;
+    /*
+    QUERY: SELECT COUNT(*) FROM "TABLE" t WHERE t."COLUMN_ID"="ID" AND TO_DATE("CHECKING_DATE",'dd.mm.yyyy') BETWEEN "DT_BEGIN" AND "DT_END";
+    */
     l_query := 'select count(*) from ' || pr_table || ' t where t.' ||
                pr_column || ' = ' || l_id || ' and to_date(''' || pr_dt ||
                ''',' || l_dt_format || ')  between t.' || pr_nm_dt_beg ||
                ' and t.' || pr_nm_dt_end;
     return l_query;
-  end;
+  end get_query;
+
+  function get_query_last(pr_table        varchar2,
+                          pr_column       varchar2,
+                          pr_id           varchar2,
+                          pr_id_is_number boolean default true,
+                          pr_nm_dt_beg    varchar2,
+                          pr_nm_dt_end    varchar2,
+                          pr_dt_beg       date,
+                          pr_dt_end       date) return clob is
+    l_query     clob;
+    l_id        varchar2(4000);
+    l_dt_format varchar2(40) := q'['dd.mm.yyyy']';
+  begin
+    if pr_id_is_number then
+      l_id := pr_id;
+    else
+      l_id := 'to_char(' || pr_id || ')';
+    end if;
+    /*
+    QUERY:  select *
+            from "pr_table" t
+           where t."pr_column" = "pr_id"
+             and (t."pr_nm_dt_beg" <= to_date('pr_dt_beg', 'dd.mm.yyyy') and
+                 t."pr_dt_end" >= to_date('pr_dt_end', 'dd.mm.yyyy')
+              or (t."pr_nm_dt_beg" >= to_date('pr_dt_beg', 'dd.mm.yyyy') and
+                 t."pr_dt_end" <= to_date('pr_dt_end', 'dd.mm.yyyy'))) ;
+    */
+    l_query := 'select count(*) from ' || pr_table || ' t where t.' ||
+               pr_column || ' = ' || l_id || ' and (t.' || pr_nm_dt_beg ||
+               '<=to_date(''' || pr_dt_beg || ''',' || l_dt_format ||
+               ') and t.' || pr_nm_dt_end || '>= to_date(''' || pr_dt_end ||
+               ''',' || l_dt_format || ') or (t.' || pr_nm_dt_beg ||
+               '>=to_date(''' || pr_dt_beg || ''',' || l_dt_format ||
+               ') and t.' || pr_nm_dt_end || '<= to_date(''' || pr_dt_end ||
+               ''',' || l_dt_format || ')))';
+    return l_query;
+  end get_query_last;
 
   function check_dates(pr_table        varchar2,
                        pr_column       varchar2 default null,
@@ -374,31 +417,25 @@ end pck_api_' || p_nm_tbl || ';
                        pr_nm_dt_beg    varchar2,
                        pr_nm_dt_end    varchar2,
                        pr_dt_beg       date,
-                       pr_dt_end       date) return boolean is
+                       pr_dt_end       date) return pck_a_types.t_result is
     no_table_exists exception;
     no_column       exception;
-    dt_wrong        exception;
-    l_pk    VARCHAR2(4000);
-    l_cnt   number;
-    l_query clob;
+    dt_beg_wrong    exception;
+    dt_end_wrong    exception;
+    dt_last_wrong   exception;
+    l_cnt    number;
+    l_query  clob;
+    l_result pck_a_types.t_result;
+  
   begin
-    --check on exist table
+    --Проверка, что таблица существует
     if not f_check_tbl(pr_table) then
       raise no_table_exists;
     end if;
-    --if column not in params then check and get primary key
-    if pr_column is null then
-      l_pk := f_get_pk(pr_table);
-      if l_pk is null then
-        raise no_column;
-      end if;
-    else
-      l_pk := pr_column;
-    end if;
-    --Check for cross dates
-    --Create query for begin date
+    --Проверка на пересечение дат
+    --Создаем запрос для даты начала
     l_query := pck_util.get_query(pr_table        => pr_table,
-                                  pr_column       => l_pk,
+                                  pr_column       => pr_column,
                                   pr_id           => pr_id,
                                   pr_id_is_number => pr_id_is_number,
                                   pr_nm_dt_beg    => pr_nm_dt_beg,
@@ -408,11 +445,11 @@ end pck_api_' || p_nm_tbl || ';
     execute immediate l_query
       into l_cnt;
     if l_cnt > 0 then
-      raise dt_wrong;
+      raise dt_beg_wrong;
     end if;
-    --Create query for end date
+    --Создаем запрос для даты окончания
     l_query := pck_util.get_query(pr_table        => pr_table,
-                                  pr_column       => l_pk,
+                                  pr_column       => pr_column,
                                   pr_id           => pr_id,
                                   pr_id_is_number => pr_id_is_number,
                                   pr_nm_dt_beg    => pr_nm_dt_beg,
@@ -422,16 +459,57 @@ end pck_api_' || p_nm_tbl || ';
     execute immediate l_query
       into l_cnt;
     if l_cnt > 0 then
-      raise dt_wrong;
+      raise dt_end_wrong;
     end if;
-    return true;
+    --Проверка на то, что период дат из параметров не попадает внутрь уже существуещего периода другой наценки
+    l_query := pck_util.get_query_last(pr_table        => pr_table,
+                                       pr_column       => pr_column,
+                                       pr_id           => pr_id,
+                                       pr_id_is_number => pr_id_is_number,
+                                       pr_nm_dt_beg    => pr_nm_dt_beg,
+                                       pr_nm_dt_end    => pr_nm_dt_end,
+                                       pr_dt_beg       => pr_dt_beg,
+                                       pr_dt_end       => pr_dt_end);
+    execute immediate l_query
+      into l_cnt;
+    if l_cnt > 0 then
+      raise dt_last_wrong;
+    end if;
+    l_result := pck_a_types.f_l_res(p_code => 1,
+                                    p_msg  => 'Проверка даты успешно пройдена');
+    return l_result;
   exception
     when no_table_exists then
-      return false;
-    when no_column then
-      return false;
-    when dt_wrong then
-      return false;
+      l_result := pck_a_types.f_l_res(p_code     => -1,
+                                      p_msg      => 'Нет таблицы ' ||
+                                                    pr_table,
+                                      p_ora_code => sqlcode,
+                                      p_ora_msg  => sqlerrm);
+      return l_result;
+    when dt_beg_wrong then
+      l_result := pck_a_types.f_l_res(p_code     => -1,
+                                      p_msg      => 'Дата начала пересекается в другом периоде дат',
+                                      p_ora_code => sqlcode,
+                                      p_ora_msg  => sqlerrm);
+      return l_result;
+    when dt_end_wrong then
+      l_result := pck_a_types.f_l_res(p_code     => -1,
+                                      p_msg      => 'Дата окончания пересекается в другом периоде дат',
+                                      p_ora_code => sqlcode,
+                                      p_ora_msg  => sqlerrm);
+      return l_result;
+    when dt_last_wrong then
+      l_result := pck_a_types.f_l_res(p_code     => -1,
+                                      p_msg      => 'Даты начала и окончания попадают в другой периоде дат или между ними попадает другой период',
+                                      p_ora_code => sqlcode,
+                                      p_ora_msg  => sqlerrm);
+      return l_result;
+      when others then 
+        l_result := pck_a_types.f_l_res(p_code     => -1,
+                                      p_msg      => 'Что-то пошло не так',
+                                      p_ora_code => sqlcode,
+                                      p_ora_msg  => sqlerrm);
+      return l_result;
   end check_dates;
 
 end pck_util;

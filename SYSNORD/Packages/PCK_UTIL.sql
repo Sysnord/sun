@@ -22,6 +22,15 @@ CREATE OR REPLACE NONEDITIONABLE package sysnord.pck_util is
                      pr_nm_dt_end    varchar2,
                      pr_dt           date) return clob;
 
+  function get_query_last(pr_table        varchar2,
+                          pr_column       varchar2,
+                          pr_id           varchar2,
+                          pr_id_is_number boolean default true,
+                          pr_nm_dt_beg    varchar2,
+                          pr_nm_dt_end    varchar2,
+                          pr_dt_beg       date,
+                          pr_dt_end       date) return clob;
+
   function check_dates(pr_table        varchar2,
                        pr_column       varchar2 default null,
                        pr_id           VARCHAR2,
@@ -29,6 +38,6 @@ CREATE OR REPLACE NONEDITIONABLE package sysnord.pck_util is
                        pr_nm_dt_beg    varchar2,
                        pr_nm_dt_end    varchar2,
                        pr_dt_beg       date,
-                       pr_dt_end       date) return boolean;
+                       pr_dt_end       date) return pck_a_types.t_result;
 end pck_util;
 /

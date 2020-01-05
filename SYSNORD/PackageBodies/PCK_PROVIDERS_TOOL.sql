@@ -43,8 +43,6 @@ CREATE OR REPLACE NONEDITIONABLE package body sysnord.pck_providers_tool is
     return l_res;
   exception
     when others then
-      pck_log.p_ins(p_va1 => 'id provider ' || pr_id,
-                    p_nm  => 'Ошибка при удалении поставщика ' || sqlerrm);
       rollback;
       apex_error.add_error(p_message          => 'Ошибка при удалении поставщика',
                            p_display_location => apex_error.c_inline_in_notification);

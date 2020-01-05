@@ -14,7 +14,7 @@ CREATE OR REPLACE NONEDITIONABLE package sysnord.pck_util is
 
   procedure p_create_api_pck(p_nm_tbl varchar2);
 
-  function get_query(pr_table        varchar2,
+/*  function get_query(pr_table        varchar2,
                      pr_column       varchar2,
                      pr_id           varchar2,
                      pr_id_is_number boolean default true,
@@ -29,7 +29,7 @@ CREATE OR REPLACE NONEDITIONABLE package sysnord.pck_util is
                           pr_nm_dt_beg    varchar2,
                           pr_nm_dt_end    varchar2,
                           pr_dt_beg       date,
-                          pr_dt_end       date) return clob;
+                          pr_dt_end       date) return clob;*/
 
   function check_dates(pr_table        varchar2,
                        pr_column       varchar2 default null,

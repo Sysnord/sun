@@ -440,8 +440,7 @@ end pck_api_' || p_nm_tbl || ';
                                   pr_id_is_number => pr_id_is_number,
                                   pr_nm_dt_beg    => pr_nm_dt_beg,
                                   pr_nm_dt_end    => pr_nm_dt_end,
-                                  pr_dt           => pr_dt_beg);
-    pck_log.p_ins(p_va1 => 'query1', p_clb_val => l_query);
+                                  pr_dt           => pr_dt_beg);    
     execute immediate l_query
       into l_cnt;
     if l_cnt > 0 then
@@ -455,7 +454,6 @@ end pck_api_' || p_nm_tbl || ';
                                   pr_nm_dt_beg    => pr_nm_dt_beg,
                                   pr_nm_dt_end    => pr_nm_dt_end,
                                   pr_dt           => pr_dt_end);
-    pck_log.p_ins(p_va1 => 'query2', p_clb_val => l_query);
     execute immediate l_query
       into l_cnt;
     if l_cnt > 0 then

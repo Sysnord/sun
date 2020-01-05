@@ -3,7 +3,6 @@ CREATE OR REPLACE NONEDITIONABLE package body sysnord.PCK_SESS is
   procedure p_createSession(p_emp number) is
   begin
     PCK_SESS.g_sess := p_emp;
-    pck_log.p_ins(p_va1 => PCK_SESS.g_sess);
   end p_createSession;
   
   function f_get_user_id(p_User_Name varchar2) return number is

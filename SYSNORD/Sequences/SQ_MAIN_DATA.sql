@@ -1,0 +1,1 @@
+CREATE SEQUENCE sysnord.sq_main_data NOCACHE;

@@ -1,0 +1,1 @@
+CREATE SEQUENCE sysnord.sq_sale_points NOCACHE;

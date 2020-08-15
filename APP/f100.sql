@@ -27,7 +27,7 @@ prompt APPLICATION 100 - SUN
 -- Application Export:
 --   Application:     100
 --   Name:            SUN
---   Date and Time:   11:52 Monday June 8, 2020
+--   Date and Time:   23:59 Saturday August 15, 2020
 --   Exported By:     ADMIN
 --   Flashback:       0
 --   Export Type:     Application Export
@@ -36,7 +36,7 @@ prompt APPLICATION 100 - SUN
 --
 
 -- Application Statistics:
---   Pages:                     20
+--   Pages:                     21
 --     Items:                   59
 --     Validations:              8
 --     Processes:               27
@@ -117,7 +117,7 @@ wwv_flow_api.create_flow(
 ,p_substitution_string_01=>'APP_NAME'
 ,p_substitution_value_01=>'SUN'
 ,p_last_updated_by=>'ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20200511075905'
+,p_last_upd_yyyymmddhh24miss=>'20200815235831'
 ,p_file_prefix => nvl(wwv_flow_application_install.get_static_app_file_prefix,'')
 ,p_files_version=>3
 ,p_ui_type_name => null
@@ -233,10 +233,24 @@ wwv_flow_api.create_list_item(
 ,p_list_item_current_for_pages=>'60'
 );
 wwv_flow_api.create_list_item(
+ p_id=>wwv_flow_api.id(6371622506382891)
+,p_list_item_display_sequence=>847
+,p_list_item_link_text=>unistr('\0410\0434\043C\0438\043D\0438\0441\0442\0440\0438\0440\043E\0432\0430\043D\0438\0435')
+,p_list_item_link_target=>'f?p=&APP_ID.:700:&SESSION.::&DEBUG.::::'
+,p_list_item_icon=>'fa-american-sign-language-interpreting'
+,p_list_item_disp_cond_type=>'FUNCTION_BODY'
+,p_list_item_disp_condition=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'return Pkg_Security.Check_role(p_user_name => v(''APP_USER''),',
+'                                    p_role => ''admin'');'))
+,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
+,p_list_item_current_for_pages=>'700'
+);
+wwv_flow_api.create_list_item(
  p_id=>wwv_flow_api.id(1650422313216417)
 ,p_list_item_display_sequence=>777
 ,p_list_item_link_text=>'LOG'
 ,p_list_item_link_target=>'f?p=&APP_ID.:777:&SESSION.::&DEBUG.::::'
+,p_parent_list_item_id=>wwv_flow_api.id(6371622506382891)
 ,p_list_item_current_type=>'COLON_DELIMITED_PAGE_LIST'
 ,p_list_item_current_for_pages=>'777'
 );
@@ -368,7 +382,9 @@ wwv_flow_api.create_security_scheme(
  p_id=>wwv_flow_api.id(1604359190113156)
 ,p_name=>'Administration Rights'
 ,p_scheme_type=>'NATIVE_FUNCTION_BODY'
-,p_attribute_01=>'return true;'
+,p_attribute_01=>wwv_flow_string.join(wwv_flow_t_varchar2(
+'return Pkg_Security.Check_role(p_user_name => v(''APP_USER''),',
+'                                    p_role => ''admin'');'))
 ,p_error_message=>'Insufficient privileges, user is not an Administrator'
 ,p_caching=>'BY_USER_BY_PAGE_VIEW'
 );
@@ -10256,7 +10272,7 @@ wwv_flow_api.create_page(
 ,p_autocomplete_on_off=>'OFF'
 ,p_page_template_options=>'#DEFAULT#'
 ,p_last_updated_by=>'ADMIN'
-,p_last_upd_yyyymmddhh24miss=>'20191215182139'
+,p_last_upd_yyyymmddhh24miss=>'20200815233305'
 );
 end;
 /
@@ -13803,6 +13819,21 @@ wwv_flow_api.create_page_item(
 ,p_attribute_02=>'N'
 ,p_attribute_04=>'TEXT'
 ,p_attribute_05=>'BOTH'
+);
+end;
+/
+prompt --application/pages/page_00700
+begin
+wwv_flow_api.create_page(
+ p_id=>700
+,p_user_interface_id=>wwv_flow_api.id(1601856408113097)
+,p_name=>unistr('\0410\0434\043C\0438\043D\0438\0441\0442\0440\0438\0440\043E\0432\0430\043D\0438\0435')
+,p_step_title=>unistr('\0410\0434\043C\0438\043D\0438\0441\0442\0440\0438\0440\043E\0432\0430\043D\0438\0435')
+,p_autocomplete_on_off=>'OFF'
+,p_page_template_options=>'#DEFAULT#'
+,p_required_role=>wwv_flow_api.id(1604359190113156)
+,p_last_updated_by=>'ADMIN'
+,p_last_upd_yyyymmddhh24miss=>'20200815235406'
 );
 end;
 /
